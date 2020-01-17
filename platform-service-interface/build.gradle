@@ -1,0 +1,10 @@
+
+jar.enabled=true
+dependencies {
+    compile project(':platform-pojo')
+    implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+

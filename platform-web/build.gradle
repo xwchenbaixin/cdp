@@ -1,0 +1,7 @@
+dependencies {
+    compile project(':platform-pojo')
+    compile project(':platform-service-interface')
+    // https://mvnrepository.com/artifact/com.alibaba.boot/dubbo-spring-boot-starter
+    compile group: 'com.alibaba.boot', name: 'dubbo-spring-boot-starter', version: '0.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+}
