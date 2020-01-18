@@ -17,7 +17,6 @@ public class TestController {
     @Reference
     private TestService testService;
 
-    @CrossOrigin(origins = {"http://localhost:8080"})
     @RequestMapping("/getUserName")
     @ResponseBody
     public TestPojo getUserName(){

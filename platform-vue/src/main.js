@@ -2,10 +2,10 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import ElementUI from 'element-ui'
-
+import store from './store'
 import App from './App'
 import router from './router'
-
+2530002
 import './icons'
 import 'element-ui/lib/theme-chalk/index.css'
 
@@ -17,6 +17,7 @@ new Vue({
   el: '#app',
   //使用路由配置
   router,
+  store,
   components: { App },
   template: '<App/>'
 })

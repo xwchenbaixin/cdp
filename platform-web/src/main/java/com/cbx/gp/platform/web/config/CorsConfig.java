@@ -20,7 +20,7 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true); // 是否支持安全证书
-        config.addAllowedOrigin("http://localhost:8080"); // 允许任何域名使用
+        config.addAllowedOrigin("http://localhost:8080"); // 设置允许当前域名使用
         config.addAllowedHeader("*"); // 允许任何头
         config.addAllowedMethod("*"); // 允许任何方法（post、get等）
         // 预检请求的有效期，单位为秒。

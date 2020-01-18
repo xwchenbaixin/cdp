@@ -62,7 +62,7 @@
     data() {
       return {
         loginForm: {
-          username: "admin",
+          username: this.$store.state.user.token,
           password: "123456"
         },
         loading: false,
@@ -84,8 +84,10 @@
 
             getUserName().then(res=>{
               console.log("哈哈哈")
+              this.loading = false;
             }).catch(res=>{
               console.log(res+"：：：：哈哈报错了")
+              this.loading = false;
             });
 
           } else {

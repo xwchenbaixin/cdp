@@ -1,19 +1,18 @@
-import Axios from 'axios';
-
+import axios from 'axios';
+import store from '@/store'
 import QS from 'qs'; // 引入qs模块，用来序列化post类型的数据，后面会提到
 // vant的toast提示框组件，大家可根据自己的ui组件更改。
 import { Toast } from 'vant';
 
 //设置baseURL
-Axios.defaults.baseURL='http://127.0.0.1:8081/'
-
+axios.defaults.baseURL='http://127.0.0.1:8081/'
 // 请求超时时间
-Axios.defaults.timeout = 10000;
-// post请求头
-Axios.defaults.headers.common['token'] = 'f4c902c9ae5a2a9d8f84868ad064e706'
-Axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+axios.defaults.timeout = 10000;
+// post请求头 设置默认tocken
+axios.defaults.headers.common['token'] =store.state.user.token;
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
 // 全局默认设置cookies
-//Axios.defaults.withCredentials=true
+//axios.defaults.withCredentials=true
 
 const statusDic = {
   400: '操作失败',
@@ -32,13 +31,13 @@ const statusDic = {
 
 
 // request拦截器
-Axios.interceptors.request.use(
+axios.interceptors.request.use(
   config => {
 
     // 每次发送请求之前判断是否存在token，如果存在，则统一在http请求的header都加上token，不用每次请求都手动添加了
     // 即使本地存在token，也有可能token是过期的，所以在响应拦截器中要对返回状态进行判断
-    // const token = store.state.token;
-    // token && (config.headers.Authorization = token);
+    const token = store.state.token;
+    token && (config.headers.Authorization = token);
     return config;
   },
     error => Promise.reject(error)
@@ -46,7 +45,7 @@ Axios.interceptors.request.use(
 
 // response 拦截器
 // 响应拦截器
-Axios.interceptors.response.use(
+axios.interceptors.response.use(
   response => {
     // 如果返回的状态码为200，说明接口请求成功，可以正常拿到数据
     // 否则的话抛出错误
@@ -133,7 +132,7 @@ Axios.interceptors.response.use(
  */
 export function get(url, params){
   return new Promise((resolve, reject) =>{
-    Axios.get(url, {
+    axios.get(url, {
       params: params
     }).then(res => {
       resolve(res.data);
@@ -150,7 +149,7 @@ export function get(url, params){
    后台是拿不到你提交的数据的。
    这就是文章开头我们import QS from ‘qs’;的原因。
 
-   这里有个小细节说下，Axios.get()方法和Axios.post()在提交数据时参数的书写方式还是有区别的。
+   这里有个小细节说下，axios.get()方法和axios.post()在提交数据时参数的书写方式还是有区别的。
    区别就是，get的第二个参数是一个{}，然后这个对象的params属性值是一个参数对象的。
    而post的第二个参数就是一个参数对象。
 
@@ -161,7 +160,7 @@ export function get(url, params){
 export function post(url, params) {
   return new Promise((resolve, reject) => {
 
-    Axios.post(url, QS.stringify(params))
+    axios.post(url, QS.stringify(params))
       .then(res => {
         resolve(res.data);
       })
