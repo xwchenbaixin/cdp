@@ -9,7 +9,7 @@ spring:
       filters: stat
       driver-class-name: com.mysql.jdbc.Driver
       #基本属性
-      url: jdbc:mysql://192.168.80.242:3306/test?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      url: jdbc:mysql://localhost:3306/cdp?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
       username: root
       password: cbx318
       #配置初始化大小/最小/最大
@@ -34,6 +34,10 @@ spring:
 #  #mapper-locations: classpath:mapping/*.xml  #注意：一定要对应mapper映射xml文件的所在路径
 #  type-aliases-package: com.cbx.gp.platform.dao  # 注意：对应实体类的路径
 #
+#开启驼峰命名转换
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
 ##pagehelper
 #pagehelper:
 #  helperDialect: mysql
@@ -42,3 +46,7 @@ spring:
 #  params: count=countSql
 #  returnPageInfo: check
 debug: false
+
+logging:
+  level:
+    com: debug

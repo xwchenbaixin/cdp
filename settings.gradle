@@ -5,3 +5,6 @@ include ':platform-dao'
 include ':platform-service-interface'
 include ':platform-service-impl'
 include ':platform-web'
+include ':platform-security'
+include ':TempDemo'
+

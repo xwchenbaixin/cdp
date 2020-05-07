@@ -64,6 +64,14 @@ configure(allprojects) {
         runtimeClasspath {
             extendsFrom developmentOnly
         }
+        // 排除冲突包 支持通过group、module排除，可以同时使用
+        all*.exclude group: 'commons-logging', module: 'commons-logging' // common-logging
+        all*.exclude group: 'log4j', module: 'log4j' // log4j
+        all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-core' // slf4j -> log4j2
+        all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl' // log4j2
+        all*.exclude group: 'org.slf4j', module: 'slf4j-jdk14' // slf4j -> jdk-logging
+        all*.exclude group: 'org.slf4j', module: 'slf4j-jcl' // slf4j -> common-logging
+        all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12' // slf4j -> log4j
     }
 
     // 定义仓库
@@ -78,12 +86,18 @@ configure(allprojects) {
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter'
         developmentOnly 'org.springframework.boot:spring-boot-devtools'
-        implementation('org.springframework.boot:spring-boot-starter-test') {
+        compile('org.springframework.boot:spring-boot-starter-test') {
             exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
         }
-        implementation("log4j:log4j:1.2.17")
+        // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+        testCompile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+
+        // https://mvnrepository.com/artifact/com.alibaba/fastjson
+        compile group: 'com.alibaba', name: 'fastjson', version: '1.2.62'
 
         testCompile group: 'junit', name: 'junit', version: '4.12'
+
+
     }
     compileJava {
         sourceCompatibility = 1.8  // can be switched to 10 for testing
@@ -126,6 +140,7 @@ configure(rootProject) {
         compile project( ':platform-service-interface')
         compile project( ':platform-service-impl')
         compile project( ':platform-web')
+        compile project( ':platform-security')
     }
 
     //jar包配置

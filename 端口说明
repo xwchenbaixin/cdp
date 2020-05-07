@@ -1,3 +1,5 @@
 web-controller：8081
 platform-service-impl:-1
 platform-vue:8080
+platform-security:9080
+platform-dao:8090

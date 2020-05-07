@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!--    在maven中配置了依赖这个就可以注释掉了-->
+    <!--    <classPathEntry location="/Program Files/IBM/SQLLIB/java/db2java.zip" />-->
+
+    <context id="DB2Tables" targetRuntime="MyBatis3">
+    <!--   自定义注释-->
+        <commentGenerator type="com.cbx.gp.platform.dao.generator.MySQLCommentGenerator">
+            <property name="author" value="Michael Chow"/>
+            <property name="dateFormat" value="yyyy/MM/dd"/>
+        </commentGenerator>
+
+        <!--数据库连接信息-->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/cdp?useUnicode=true&amp;characterEncoding=UTF-8&amp;allowMultiQueries=true&amp;useSSL=false&amp;allowPublicKeyRetrieval=true"
+                        userId="root"
+                        password="cbx318">
+        </jdbcConnection>
+
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+        <!--JavaBean 实体类-->
+        <javaModelGenerator targetPackage="com.cbx.gp.platform.pojo.entity" targetProject="..\cdp\platform-pojo\src\main\java">
+            <property name="enableSubPackages" value="false" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+        <!--SQL映射文件-->
+        <sqlMapGenerator targetPackage="mapping" targetProject="..\cdp\platform-dao\src\main\resources">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+        <!--Mapper接口-->
+        <javaClientGenerator type="ANNOTATEDMAPPER"  targetPackage="com.cbx.gp.platform.dao.mapper" targetProject="..\cdp\platform-dao\src\main\java">
+            <property name="enableSubPackages" value="false" />
+            <property name="addMapperAnnotation" value="true"/>
+        </javaClientGenerator>
+        <!--配置所要生成代码的表-->
+<!--        <table  tableName="cdp_permission" domainObjectName="CdpPermission" ></table>-->
+        <table  tableName="cdp_collect_def" domainObjectName="CdpCollectDef" ></table>
+    </context>
+</generatorConfiguration>

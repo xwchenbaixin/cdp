@@ -1,0 +1,30 @@
+{
+	"id": "1",
+	"collect_name": "电影天堂采集",
+	"collect_param": [{
+		"name": "movieName",
+		"dataType": 0,
+		"xpath": "//tr[2]/td[2]/b/a/text()",
+		"regex": "[\u4e00-\u9fa5].*",
+		"alias": "电影名称"
+
+	}, {
+		"name": "url",
+		"dataType": 0,
+		"xpath": "//tr[2]/td[2]/b/a/@href",
+		"regex": "",
+		"alias": "链接"
+	}, {
+		"name": "desc",
+		"dataType": 0,
+		"xpath": "//tr[4]/td/text()",
+		"regex ": "",
+		"alias": "描述"
+	}],
+	"data_domain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
+	"user_id": null,
+	"next_page": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
+	"next_page_type": 0,
+	"collect_url": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
+	"next_page_total": 1
+}

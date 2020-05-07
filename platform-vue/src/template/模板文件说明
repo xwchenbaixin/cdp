@@ -1,0 +1,1 @@
+如果需要添加新的服务，将本目录直接复制并且改名即可，在common中的modules.js添加目录名称 参考platform
