@@ -72,6 +72,7 @@ public class MyInvocationSecurityMetadataSourceService  implements
             //System.out.println("matcher:"+matcher);
             //System.out.println("----------------2--------------------");
             if(matcher.matches(request)) {
+
                 return map.get(resUrl);
             }
         }

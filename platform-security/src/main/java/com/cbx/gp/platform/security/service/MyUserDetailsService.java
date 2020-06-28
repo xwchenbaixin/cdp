@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 @Service("myUserDetailsService")
 public class MyUserDetailsService implements UserDetailsService{
@@ -21,25 +22,25 @@ public class MyUserDetailsService implements UserDetailsService{
 	private UserPermissionMapper userPermissionMapper;
     
 	@Override
-	public UserDetails loadUserByUsername(String workNo) throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		// TODO Auto-generated method stub
-		
-		User user=userPermissionMapper.getUserByWorkNo(workNo);
+		if(username==null){
+			throw new UsernameNotFoundException("账号为null");
+		}
+		User user=userPermissionMapper.getUserByUsername(username);
 		if(user==null) {
 			throw new UsernameNotFoundException("账号不存在或密码错误");
 		}
-		Role role=userPermissionMapper.getRoleListById(user.getRoleId());
-		
-		List<SimpleGrantedAuthority> authorities=new ArrayList<SimpleGrantedAuthority>();
-		//之所以要添加"ROLE_"是因为前端的thymeleaf-extras-springsecurity5校验的时候，
-		//sec:authorize="hasRole('TEACHER')",只有在这里加ROLE_才能识别TEACHER
-		authorities.add(new SimpleGrantedAuthority(role.getName()));
-		//authorities.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
-		
-		System.out.println("role name:"+role.getName());
-		
-		System.out.println("username:"+user.getWorkNo());
-		System.out.println("password:"+user.getPassword());
+		List<Role> roles=userPermissionMapper.getRoleListByUserId(user.getId());
+		List<SimpleGrantedAuthority> authorities = new ArrayList<SimpleGrantedAuthority>();
+		for(Role role:roles) {
+			//之所以要添加"ROLE_"是因为前端的thymeleaf-extras-springsecurity5校验的时候，
+			//sec:authorize="hasRole('TEACHER')",只有在这里加ROLE_才能识别TEACHER
+			authorities.add(new SimpleGrantedAuthority(role.getName()));
+			//authorities.add(new SimpleGrantedAuthority("ROLE_"+role.getName()));
+		}
+
+
 		/*
 		UserDetails userDetails = userCache.getUserFromCache(workNo);
 		if(userDetails==null)

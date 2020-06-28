@@ -50,3 +50,4 @@ debug: false
 logging:
   level:
     com: debug
+

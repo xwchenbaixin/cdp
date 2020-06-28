@@ -2,7 +2,7 @@
   <el-container style="height: 100%;width: 100%;">
     <el-aside width="15%" style="height: 100%">
       <el-container style="height: 100%">
-        <el-header style="  width: 100%;padding: 0px;" >
+        <el-header style="  width: 100%;padding: 0px;text-align: center" >
           <h1>数据采集系统</h1>
         </el-header>
         <el-main style="padding: 0">
@@ -24,27 +24,38 @@
           <el-menu  class="el-menu-demo" mode="horizontal" >
 
             <el-submenu index="2" style="float: right;">
-              <template slot="title">我的工作台</template>
-              <el-menu-item index="2-1">选项1</el-menu-item>
-              <el-menu-item index="2-2">选项2</el-menu-item>
-              <el-menu-item index="2-3">选项3</el-menu-item>
+              <template slot="title">{{userType}}，欢迎您：{{user.nickname}}</template>
+              <el-menu-item index="2-1" @click="upgradeUserDialog=true" v-if="user.type==1">升级</el-menu-item>
+              <el-menu-item index="2-2">详细信息</el-menu-item>
+              <el-menu-item index="2-3" @click="doLogout">退出</el-menu-item>
             </el-submenu>
           </el-menu>
 
         </el-header>
 
-        <el-main style="padding: 0;padding-right: 5px">
-          <el-tabs v-model="tabs.editableTabsValue" type="border-card"  @tab-remove="removeTab" @tab-click="tabClick" style="height: calc(100% - 2px)">
+        <el-main style="padding: 0;padding-right: 5px;">
+          <el-tabs v-model="tabs.editableTabsValue" type="border-card"  @tab-remove="removeTab" @tab-click="tabClick" class="cus-tab" >
+            <el-tab-pane
+
+              key="indexView"
+              label="首页"
+              name="indexView"
+            >
+
+            </el-tab-pane>
+
+
             <el-tab-pane
               v-for="(item, index) in tabs.editableTabs"
               :key="item.name"
               :label="item.title"
               :name="item.name"
+              v-if="item.name!='indexView'"
               closable
             >
-              <keep-alive> <router-view></router-view> </keep-alive>
-            </el-tab-pane>
 
+            </el-tab-pane>
+            <keep-alive> <router-view></router-view> </keep-alive>
 
           </el-tabs>
         </el-main>
@@ -56,19 +67,38 @@
     <el-container style="height: 100%">
 
     </el-container>
+    <el-dialog
+      title="提示"
+      :visible.sync="upgradeUserDialog"
+      v-if="upgradeUserDialog"
+      width="30%">
+      <UpgradeUser></UpgradeUser>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="upgradeUserDialog = false">取 消</el-button>
+        <el-button type="primary" @click="upgradeUserDialog = false">确 定</el-button>
+      </span>
+    </el-dialog>
+
   </el-container>
 
 </template>
 
 <script>
   import MenuTree from "@/common/components/menu-tree/";
-  //import {getMenuTree} from '@/common/api';
+  import UpgradeUser from "./upgradeUser"
+  import {logout} from "@/common/api"
+  //import {createNewOrder} from '@/common/api';
   export default {
     components: {
-      MenuTree: MenuTree
+      MenuTree,
+      UpgradeUser
     },
     data() {
       return {
+        user:JSON.parse(this.$store.state.user.user),
+
+        userType:"",
+        upgradeUserDialog:false,
         activeIndex: this.$route.path.split("/")[1],
         menuTreeData:[],
         tsbActiveName:"",
@@ -79,6 +109,23 @@
       };
     },
     methods:{
+      formatUserType(){
+        console.log(this.$store.state)
+        if(this.user.type==1){
+          this.userType="普通会员";
+        }else if(this.user.type==2){
+          this.userType="付费会员";
+        }else if(this.user.type==3){
+          this.userType="管理员";
+        }
+      },
+
+      doLogout(){
+        logout().then(res=>{
+            this.$router.push({path: "/login"});
+
+        })
+      },
       menuClick(value){
 
         if(!this.tabIsExists(value.name)){
@@ -120,6 +167,7 @@
       removeTab(targetName) {
         let tabs = this.tabs.editableTabs;
         let activeName = this.tabs.editableTabsValue;
+        console.log(this.tabs.editableTabs)
         if (activeName === targetName) {
           tabs.forEach((tab, index) => {
             if (tab.name === targetName) {
@@ -155,6 +203,7 @@
     mounted() {
       this.initTabs();
       this.initMenu();
+      this.formatUserType();
     },
     watch:{
       "$route" : {
@@ -169,5 +218,14 @@
 </script>
 
 <style>
+  .cus-tab{
+    height: calc(100% - 2px)
+  }
+  .cus-tab>.el-tabs__content{
+    height: calc(100% - 69px);
+  }
+  .el-tabs__content{
+    overflow: auto;
+  }
 </style>
 

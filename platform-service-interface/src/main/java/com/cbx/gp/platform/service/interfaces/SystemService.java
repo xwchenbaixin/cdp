@@ -2,6 +2,7 @@ package com.cbx.gp.platform.service.interfaces;
 
 import com.cbx.gp.platform.pojo.bean.MenuTree;
 import com.cbx.gp.platform.pojo.entity.CdpPermission;
+import com.cbx.gp.platform.pojo.reqModel.RequestModel;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ import java.util.List;
  * @Created by CBX
  */
 public interface SystemService {
-  List<MenuTree> getMenuTree();
+  List<MenuTree> getMenuTree(RequestModel<MenuTree> req);
 
-  List<CdpPermission> getMenuData();
+  List<CdpPermission> getMenuData(RequestModel<MenuTree> req);
 }

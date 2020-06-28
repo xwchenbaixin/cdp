@@ -13,6 +13,7 @@ buildscript {
 plugins {
     id 'org.springframework.boot' version '2.2.2.RELEASE'
     id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
     id 'java'
     id 'idea'
     id 'eclipse'
@@ -85,7 +86,7 @@ configure(allprojects) {
     // 定义依赖:声明项目中需要哪些依赖
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter'
-        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+        //developmentOnly 'org.springframework.boot:spring-boot-devtools'
         compile('org.springframework.boot:spring-boot-starter-test') {
             exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
         }

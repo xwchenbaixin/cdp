@@ -1,5 +1,7 @@
 package com.cbx.gp.platform.pojo.reqModel;
 
+import com.cbx.gp.platform.pojo.entity.CdpUser;
+
 import java.io.Serializable;
 
 /**
@@ -11,7 +13,7 @@ import java.io.Serializable;
 public class RequestModel<T> implements Serializable {
   public Pagination pagination;
   public T param;
-
+  public CdpUser user;
   public Pagination getPagination() {
     return pagination;
   }
@@ -26,5 +28,13 @@ public class RequestModel<T> implements Serializable {
 
   public void setParam(T param) {
     this.param = param;
+  }
+
+  public CdpUser getUser() {
+    return user;
+  }
+
+  public void setUser(CdpUser user) {
+    this.user = user;
   }
 }

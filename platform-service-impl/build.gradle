@@ -4,11 +4,19 @@ dependencies {
     compile project(':platform-service-interface')
     compile project(':platform-pojo')
     compile project(':platform-dao')
-    compile group: 'com.alibaba.boot', name: 'dubbo-spring-boot-starter', version: '0.2.0'
+
     compile group: 'com.alibaba', name: 'druid-spring-boot-starter', version: '1.1.10'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.47'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.1'
-    
+
+    // https://mvnrepository.com/artifact/com.alipay.sdk/alipay-sdk-java
+    compile group: 'com.alipay.sdk', name: 'alipay-sdk-java', version: '4.10.0.ALL'
+
+
+    compile group: 'org.apache.dubbo', name: 'dubbo-spring-boot-starter', version: '2.7.6'
+    compile group: 'org.apache.curator', name: 'curator-framework', version: '2.12.0'
+    compile group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.4.12', ext: 'pom'
+    compile group: 'org.apache.curator', name: 'curator-recipes', version: '2.12.0'
 
 }
 

@@ -1,12 +1,16 @@
 package com.cbx.gp.platform.pojo.entity;
 
+import java.io.Serializable;
+
 /**
  * @Classname ParamRule
  * @Description TODO
  * @Date 2020/5/2 13:36
  * @Created by CBX
  */
-public class ParamRule {
+public class ParamRule implements Serializable {
+  private int id;
+
   private String xpath;
   private String regex;
   //数据类型 0-str，1-img
@@ -16,12 +20,12 @@ public class ParamRule {
 
   private String alias;
 
-  public String getAlias() {
-    return alias;
+  public int getId() {
+    return id;
   }
 
-  public void setAlias(String alias) {
-    this.alias = alias;
+  public void setId(int id) {
+    this.id = id;
   }
 
   public String getXpath() {
@@ -56,10 +60,19 @@ public class ParamRule {
     this.name = name;
   }
 
+  public String getAlias() {
+    return alias;
+  }
+
+  public void setAlias(String alias) {
+    this.alias = alias;
+  }
+
   @Override
   public String toString() {
     return "ParamRule{" +
-            "xpath='" + xpath + '\'' +
+            "id=" + id +
+            ", xpath='" + xpath + '\'' +
             ", regex='" + regex + '\'' +
             ", dataType=" + dataType +
             ", name='" + name + '\'' +

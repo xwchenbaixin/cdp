@@ -1,6 +1,6 @@
 package com.cbx.gp.platform.web.controller;
 
-import com.alibaba.dubbo.config.annotation.Reference;
+import org.apache.dubbo.config.annotation.Reference;
 import com.cbx.gp.platform.pojo.bean.TestPojo;
 import com.cbx.gp.platform.service.interfaces.TestService;
 import org.springframework.stereotype.Controller;

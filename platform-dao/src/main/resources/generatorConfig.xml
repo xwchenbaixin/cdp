@@ -40,6 +40,29 @@
         </javaClientGenerator>
         <!--配置所要生成代码的表-->
 <!--        <table  tableName="cdp_permission" domainObjectName="CdpPermission" ></table>-->
-        <table  tableName="cdp_collect_def" domainObjectName="CdpCollectDef" ></table>
+<!--        <table  tableName="cdp_collect_def" domainObjectName="CdpCollectDef" >-->
+<!--            <columnOverride column="headers" jdbcType="VARCHAR"></columnOverride>-->
+<!--            <columnOverride column="collect_param" jdbcType="VARCHAR"></columnOverride>-->
+<!--        </table>-->
+
+<!--        <table  tableName="CDP_DATA_SET_DEF" domainObjectName="CdpDataSetDef" >-->
+<!--            <columnOverride column="script" jdbcType="VARCHAR"></columnOverride>-->
+<!--            <columnOverride column="table_def" jdbcType="VARCHAR"></columnOverride>-->
+<!--        </table>-->
+<!--        <table  tableName="CDP_DATA_VIEW" domainObjectName="CdpDataView" ></table>-->
+<!--        <table  tableName="CDP_ORDER" domainObjectName="CdpOrder" ></table>-->
+<!--        <table  tableName="CDP_FILE" domainObjectName="CdpFile" ></table>-->
+
+        <table  tableName="CDP_ROLE" domainObjectName="CdpRole" ></table>
+<!--        <table  tableName="CDP_ROLE_PERMISSION" domainObjectName="CdpRolePermission" ></table>-->
+<!--        <table  tableName="CDP_SYS_PARAM" domainObjectName="CdpSysParam" ></table>-->
+<!--        <table  tableName="CDP_TIMED_TASK" domainObjectName="CdpTimedTask" >-->
+<!--            <columnOverride column="param" jdbcType="VARCHAR"></columnOverride>-->
+<!--        </table>-->
+<!--        -->
+<!--        <table  tableName="CDP_USER_ROLE" domainObjectName="CdpUserRole" ></table>-->
+<!--        <table  tableName="CDP_USER" domainObjectName="CdpUser" ></table>-->
+
+<!--        <table  tableName="QRTZ_CRON_TRIGGERS" domainObjectName="QrtzCronTriggers" ></table>-->
     </context>
 </generatorConfiguration>

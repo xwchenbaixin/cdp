@@ -9,7 +9,7 @@ spring:
       filters: stat
       driver-class-name: com.mysql.jdbc.Driver
       #基本属性
-      url: jdbc:mysql://192.168.80.242:3306/test?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      url: jdbc:mysql://localhost:3306/cdp?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC
       username: root
       password: cbx318
       #配置初始化大小/最小/最大
@@ -42,3 +42,11 @@ spring:
 #  params: count=countSql
 #  returnPageInfo: check
 debug: false
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com: debug

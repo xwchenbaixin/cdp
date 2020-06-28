@@ -1,18 +1,26 @@
 <template>
   <div>
-    <div style="margin-bottom: 5px;float: right;">
+    <div style="margin-bottom: 10px;float: right;">
+
+      <el-button  size="small" @click="getDataCollectData">刷新</el-button>
       <el-button type="primary" size="small" @click="dataOperate('add',null)">新增</el-button>
-      <el-button type="danger" size="small" @click="toggleSelection">删除</el-button>
+      <el-button type="danger" size="small" @click="deleteData(null)">删除</el-button>
     </div>
 
     <el-table
       ref="multipleTable"
-      :data="tableData.slice((paginationData.currentPage-1)*paginationData.pageSize,paginationData.currentPage*paginationData.pageSize)"
+      :data="tableData"
       @selection-change="handleSelectionChange"
       border
       style="width: 100%">
+
       <el-table-column
         type="selection"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        prop="id"
+        label="序号"
         width="55">
       </el-table-column>
       <el-table-column
@@ -23,14 +31,24 @@
         prop="collectUrl"
         label="网址">
       </el-table-column>
-
+      <el-table-column
+        prop="status"
+        label="状态"
+        :formatter="statusFormat">
+      </el-table-column>
       <el-table-column
         fixed="right"
         label="操作"
-        width="100">
+        align="center"
+        width="160">
         <template slot-scope="scope">
           <el-button @click="editDialog(scope.row)" type="text" size="small">编辑</el-button>
-          <el-button @click="editDialog(scope.row)" type="text" size="small">执行</el-button>
+          <el-button @click="webmagicAsyncStart(scope.row.id)" type="text" size="small" :disabled="scope.row.status==3">
+            {{
+                scope.row.status!=3?"执行":"正在执行"
+            }}
+          </el-button>
+          <el-button @click="deleteData(scope.row.id)" type="text" size="small">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -39,7 +57,7 @@
         background
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
-        :current-page.sync="paginationData.currentPage"
+        :current-page.sync="paginationData.currPage"
         :page-sizes="[10, 20, 50]"
         :page-size.sync="paginationData.pageSize"
         layout="total, sizes, prev, pager, next, jumper"
@@ -50,7 +68,7 @@
 
 
     <el-dialog :title="dialogTitleName" :visible.sync="operateDialog" width="70%" top="2%"
-               :center="true"
+               :center="true" :close-on-click-modal="false"
     >
       <el-form :model="formData">
         <el-form-item label="名称" :label-width="formLabelWidth">
@@ -119,7 +137,7 @@
               width="150">
               <template slot-scope="scope">
                 <el-button @click="paramRuleOperate('edit',scope.row)"  size="mini">编辑</el-button>
-                <el-button @click="paramRuleOperate('delete',scope.row)"  type="danger" size="mini">删除</el-button>
+                <el-button @click="deleteParamRule(scope.row.id)"  type="danger" size="mini">删除</el-button>
               </template>
 
             </el-table-column>
@@ -130,14 +148,14 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="operateDialog = false">取 消</el-button>
-        <el-button type="primary" @click="operateDialog = false">确 定</el-button>
-        <el-button type="warning" @click="operateDialog = false">预 览</el-button>
+        <el-button @click="operateDialog = false">关 闭</el-button>
+        <el-button type="primary" @click="dataCollectHandle">保 存</el-button>
+        <el-button type="warning" @click="webmagicSyncRun" v-loading.fullscreen.lock="fullscreenLoading">预 览</el-button>
       </div>
     </el-dialog>
 
 <!--    :close-on-click-modal="false"-->
-    <el-dialog :title="paramRuleDialogName" :visible.sync="paramRuleDialog" 	>
+    <el-dialog :title="paramRuleDialogName" :visible.sync="paramRuleDialog" 	:close-on-click-modal="false">
       <el-form :model="paramRuleFormData">
         <el-form-item label="中文名称" :label-width="formLabelWidth">
           <el-input v-model="paramRuleFormData.alias" autocomplete="off" :readonly="paramOperateType=='view'"></el-input>
@@ -152,7 +170,7 @@
           <el-input v-model="paramRuleFormData.regex" autocomplete="off" :readonly="paramOperateType=='view'"></el-input>
         </el-form-item>
         <el-form-item label="数据类型" :label-width="formLabelWidth">
-          <el-select v-model="paramRuleFormData.datatype" placeholder="请选择下一页类型"  :disabled="paramOperateType=='view'" style="float:left;">
+          <el-select v-model="paramRuleFormData.dataType" placeholder="请选择下一页类型"  :disabled="paramOperateType=='view'" style="float:left;">
             <el-option label="文本" :value="0"></el-option>
             <el-option label="图片" :value="1"></el-option>
           </el-select>
@@ -168,16 +186,42 @@
 
     </el-dialog>
 
+    <el-dialog title="数据预览" :visible.sync="collectedDataDialog"  width="80%" top="3%"	>
+      <ces-table
+        size='mini'
+        :isPagination='true'
+        :tableData='collectedData'
+        :tableCols='collectedCols'
+      >
+      </ces-table>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+  import cesTable from '@/common/components/custom-table'
+  import {
+    listCdpCollectDef,
+    getCollectDefById,
+    addCdpCollectDef,
+    updateCdpCollectDef,
+    deleteCdpCollectDefByIds,
+    webmagicSyncRun,
+    webmagicAsyncStart
+  } from "@/common/api/";
   export default {
     name: 'DataCollect',
+    components:{
+      cesTable
+    },
     data() {
       return {
+        fullscreenLoading:false,
+        collectedDataDialog:false,
+        collectedData:[],
+        collectedCols:[],
         paginationData:{
-          currentPage: 1,
+          currPage: 1,
           pageSize:10,
           total:0,
         },
@@ -198,13 +242,14 @@
           nextPage: "",
           nextPageTotal: 0,
           nextPageType: 0,
+          dataSetDefId:0,
           userId: null,
           headers:""
         },
         paramRuleFormData:{
           id:0,
           name: "",
-          datatype: 0,
+          dataType: 0,
           xpath: "",
           regex: "",
           alias: ""
@@ -213,8 +258,114 @@
       }
     },
     methods: {
+      webmagicAsyncStart(id){
+        webmagicAsyncStart({
+          "param":{
+            "id":id
+          }
+        }).then(res=>{
+          this.$message({
+            message: '已经开始执行',
+            type: 'success'
+          });
+          this.getDataCollectData();
+        })
+      },
+
+      statusFormat(row, column, cellValue, index){
+        if(row.status==0)
+          return "未执行"
+        else if(row.status==1)
+          return "执行失败"
+        else if(row.status==2)
+          return "执行成功"
+        else if(row.status==3)
+          return "正在执行"
+        return row.status;
+      },
+      webmagicSyncRun(){
+        this.collectedCols=[];
+        this.fullscreenLoading=true;
+        webmagicSyncRun({
+          "param":{
+            ...this.formData,
+            collectParam:JSON.stringify(this.formData.collectParam),
+            nextPageTotal:this.formData.nextPageTotal<=3?this.formData.nextPageTotal:3
+          }
+        }).then(res=>{
+          let that=this;
+          this.formData.collectParam.forEach(item=>{
+            that.collectedCols.push({label:item.alias,prop:item.name});
+          })
+          this.collectedData=res.data;
+          this.fullscreenLoading=false;
+          this.collectedDataDialog=true;
+        }).catch(res=>{
+          this.fullscreenLoading=false;
+          this.$alert('执行失败', '执行信息', {
+            confirmButtonText: '确定',
+          });
+
+        });
+
+      },
+      deleteParamRule(id){
+        let that=this;
+        this.formData.collectParam.forEach(function(item, index, arr) {
+          if(item.id == id) {
+            that.formData.collectParam.splice(index, 1);
+          }
+        });
+
+      },
+      dataCollectHandle(){
+        if(this.formData.collectParam.length==0){
+          this.$message({
+            message: '请添加爬取参数',
+            type: 'error'
+          });
+          return ;
+        }
+        if(this.operateType=="add") {
+          addCdpCollectDef({
+            "param":{
+              ...this.formData,
+              collectParam:JSON.stringify(this.formData.collectParam)
+            }
+          }).then(res=>{
+            this.$message({
+              message: '添加成功',
+              type: 'success'
+            });
+            this.getDataCollectData();
+          }).catch(res=>{
+            this.$message({
+              message: '添加失败',
+              type: 'error'
+            });
+          });
+
+        }
+        else if(this.operateType=="edit") {
+          updateCdpCollectDef({
+            "param":{
+              ...this.formData,
+              collectParam:JSON.stringify(this.formData.collectParam)
+            }
+          }).then(res=>{
+            this.$message({
+              message: '保存成功',
+              type: 'success'
+            });
+            this.getDataCollectData();
+          }).catch(res=>{
+            console.log(res+"：：：：哈哈报错了")
+          });
+        }
+      },
+
       dataTypeFormat(row, column, cellValue, index){
-        return row.datatype==0?"文本":"图片";
+        return row.dataType==0?"文本":"图片";
       },
 
       paramRuleOk() {
@@ -229,20 +380,17 @@
           }
           this.paramRuleFormData.id=maxId+1;
           this.formData.collectParam.push(this.paramRuleFormData);
-
         }else if(this.paramOperateType=='edit'){
           for(let i=0;i<this.formData.collectParam.length;i++){
             let item=this.formData.collectParam[i];
             if(item.id==this.paramRuleFormData.id) {
               console.log(this.paramRuleFormData)
-
               Object.assign(this.formData.collectParam[i],this.paramRuleFormData);
               break;
             }
           }
 
         }
-
         this.paramRuleDialog=false
       },
       paramRuleOperate(type,data){
@@ -257,27 +405,67 @@
           this.paramRuleDialogName="查看";
         if(data!=null) {
           this.paramRuleFormData=this.deepCopyData(data);
+          console.log(this.paramRuleFormData)
         }
         this.paramRuleDialog=true;
       },
       viewDialog(row) {
         this.dataOperate('view',row);
-        console.log(row);
       },
       editDialog(row) {
         this.dataOperate('edit',row);
-        console.log(row);
       },
       handleSizeChange(val) {
-        console.log(`每页 ${val} 条`);
+        this.getDataCollectData();
       },
       handleCurrentChange(val) {
-
-        console.log(`当前页: `+this.paginationData.currentPage);
-        console.log(this.tableData.slice((this.paginationData.currentPage-1)*this.paginationData.pageSize,this.paginationData.currentPage*this.paginationData.pageSize).length)
+        this.getDataCollectData();
       },
-      toggleSelection() {
-        console.log(this.multipleSelection);
+      deleteData(id) {
+        let ids=[];
+        if(id==null){
+          this.multipleSelection.forEach(item =>{
+            ids.push(item.id)
+          })
+          if(ids.length==0){
+            this.$message({
+              message: '请至少选择一条数据',
+              type: 'warning'
+            });
+            return;
+          }
+        }else{
+          ids.push(id)
+        }
+
+        this.$confirm('此操作将永久删除该数据, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          customClass:'top10'
+        }).then(() => {
+          deleteCdpCollectDefByIds({
+            "ids":ids
+          }).then(res=>{
+            this.$message({
+              message: '删除成功',
+              type: 'success'
+            });
+            this.getDataCollectData();
+          }).catch(res=>{
+            this.$message({
+              message: '删除失败，请联系管理员',
+              type: 'error'
+            });
+          });
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });
+        });
+
+
         this.$refs.multipleTable.clearSelection();
       },
       handleSelectionChange(val) {
@@ -295,6 +483,9 @@
           this.dialogTitleName="查看";
         if(data!=null) {
           this.formData=this.deepCopyData(data);
+          if(this.formData.collectParam.length>0) {
+            this.formData.collectParam = JSON.parse(this.formData.collectParam);
+          }
         }
         this.operateDialog=true;
 
@@ -309,6 +500,7 @@
           nextPage: "",
           nextPageTotal: 0,
           nextPageType: 0,
+          dataSetDefId:0,
           userId: null,
           headers:""
         }
@@ -317,679 +509,40 @@
         this.paramRuleFormData={
           id:0,
           name: "",
-            datatype: 0,
-            xpath: "",
-            regex: "",
-            alias: ""
+          dataType: 0,
+          xpath: "",
+          regex: "",
+          alias: ""
         }
       },
       deepCopyData(data){
         return JSON.parse(JSON.stringify(data));
+      },
+      getDataCollectData(){
+        listCdpCollectDef({
+          "pagination":this.paginationData
+        }).then(res=>{
+          this.tableData=res.data;
+          this.paginationData.total=res.total;
+        }).catch(res=>{
+          console.log(res+"：：：：哈哈报错了")
+        });
       }
     },
     watch:{
-      tableData(newVal,oldVal) {
-        this.paginationData.total=newVal.length;
-      }
+
     },
     computed: {
 
     },
     mounted() {
-      this.tableData=[
-        {
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },{
-          "id": "1",
-          "collectName": "电影天堂采集",
-          "collectParam": [{
-            "id":1,
-            "name": "moviename",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/text()",
-            "regex": "[\\u4e00-\\u9fa5].*",
-            "alias": "电影名称"
-
-          }, {
-            "id":2,
-            "name": "url",
-            "datatype": 0,
-            "xpath": "//tr[2]/td[2]/b/a/@href",
-            "regex": "",
-            "alias": "链接"
-          }, {
-            "id":3,
-            "name": "desc",
-            "datatype": 0,
-            "xpath": "//tr[4]/td/text()",
-            "regex ": "",
-            "alias": "描述"
-          }],
-          "dataDomain": "//*[@id=\"header\"]/div/div[3]/div[3]/div[2]/div[2]/div[2]/ul/table/tbody",
-          "userId": null,
-          "nextPage": "//*[@id='header']/div/div[3]/div[3]/div[2]/div[2]/div[2]/div/a[text()='下一页']/@href",
-          "nextPageType": 0,
-          "collectUrl": "https://www.dytt8.net/html/gndy/dyzz/list_23_1.html",
-          "nextPageTotal": 1,
-          "headers":"{\n" +
-            "'Connection': 'keep-alive',\n" +
-            "'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36',\n" +
-            "'Accept': '*/*',\n" +
-            "'Sec-Fetch-Site': 'same-origin',\n" +
-            "'Sec-Fetch-Mode': 'cors',\n" +
-            "'Sec-Fetch-Dest': 'empty',\n" +
-            "'Accept-Encoding': 'gzip, deflate, br',\n" +
-            "'Accept-Language': 'zh-CN,zh;q=0.9',\n" +
-            "'Cookie': 'operatorName=%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86%E5%91%98; username=admin; operator_code=admin'\n" +
-            "}"
-        },
-      ];
+      this.getDataCollectData();
       //console.log(this.paginationData)
 
     }
   }
 </script>
 
-<style scoped>
+<style >
 
 </style>

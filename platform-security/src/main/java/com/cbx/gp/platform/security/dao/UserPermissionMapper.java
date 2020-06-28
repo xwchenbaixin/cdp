@@ -16,23 +16,26 @@ import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface UserPermissionMapper {
-	@Select("SELECT *,R.name as role_name,U.id as id FROM user U LEFT JOIN role R ON U.role_id=R.id WHERE work_no=#{workNo} AND U.state=1")
-	public User getUserByWorkNo(@Param("workNo") String workNo);
+	@Select("select * from cdp_user where username=#{username} and status=1")
+	public User getUserByUsername(@Param("username") String workNo);
 
-	@Select("SELECT * FROM role WHERE ID=#{roleId} and state=1")
-	public Role getRoleListById(@Param("roleId") int roleId);
+	@Select("SELECT r.* FROM cdp_user_role ur LEFT JOIN cdp_user u ON ur.user_id=u.id LEFT JOIN cdp_role r ON ur.role_id=r.id where ur.user_id=#{userId}")
+	public List<Role> getRoleListByUserId(@Param("userId") int userId);
+
+	@Select("SELECT * FROM cdp_role WHERE ID=#{roleId} and status=1")
+	public Role getRoleById(@Param("roleId") int roleId);
+
+
+	@Select("SELECT * FROM cdp_permission WHERE ID=#{permissionId}")
+	public Permission getPermissionById(@Param("permissionId") int permissionId);
 	
-	
-	@Select("SELECT * FROM permission WHERE ID=#{permissionId}")
-	public Permission getPermissions(@Param("permissionId") int permissionId);
-	
-	@Select("SELECT *,RP.id AS rp_id FROM role_permission RP "
-			+ "LEFT JOIN permission P ON RP.permission_ID=P.ID "
-			+ "LEFT JOIN role R ON RP.role_ID = R.ID")
+	@Select("SELECT *,RP.id AS rp_id FROM cdp_role_permission RP "
+			+ "LEFT JOIN cdp_permission P ON RP.permission_ID=P.ID "
+			+ "LEFT JOIN cdp_role R ON RP.role_ID = R.ID")
 	@Results({
 		@Result(property = "id",column = "rp_id"),
-		@Result(property = "permission",column = "permission_id", one = @One(select = "com.nchu.cbx.security.dao.UserPermissionMapper.getPermissions")),
-		@Result(property = "role",column = "role_id" , one = @One(select = "com.nchu.cbx.security.dao.UserPermissionMapper.getRoleListById"))
+		@Result(property = "permission",column = "permission_id", one = @One(select = "com.cbx.gp.platform.security.dao.UserPermissionMapper.getPermissionById")),
+		@Result(property = "role",column = "role_id" , one = @One(select = "com.cbx.gp.platform.security.dao.UserPermissionMapper.getRoleById"))
 	})
 	public List<RolePermission> getRolePermissions();
 }

@@ -1,14 +1,18 @@
 package com.cbx.gp.platform.web.controller;
 
-import com.alibaba.dubbo.config.annotation.Reference;
+import com.cbx.gp.platform.pojo.entity.CdpUser;
+import org.apache.dubbo.config.annotation.Reference;
 import com.cbx.gp.platform.pojo.bean.MenuTree;
 import com.cbx.gp.platform.pojo.entity.CdpPermission;
+import com.cbx.gp.platform.pojo.reqModel.RequestModel;
+import com.cbx.gp.platform.pojo.resModel.ResponseModel;
 import com.cbx.gp.platform.service.interfaces.SystemService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.apache.catalina.User;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -25,12 +29,28 @@ public class SystemController {
 
   @PostMapping("getMenuTree")
   public List<MenuTree> getMenuTree(){
-    return systemService.getMenuTree();
+    RequestModel<MenuTree> req=new RequestModel<>();
+    HttpServletRequest request=((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+    CdpUser user= (CdpUser) request.getSession().getAttribute("user");
+    req.setUser(user);
+    if(user==null){
+      return null;
+    }
+    return systemService.getMenuTree(req);
 
   }
 
   @PostMapping("getMenuData")
   public List<CdpPermission> getMenuData(){
-    return systemService.getMenuData();
+    RequestModel<MenuTree> req=new RequestModel<>();
+    HttpServletRequest request=((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+    CdpUser user= (CdpUser) request.getSession().getAttribute("user");
+    req.setUser(user);
+    if(user==null){
+      return null;
+    }
+    return systemService.getMenuData(req);
   }
+
+
 }

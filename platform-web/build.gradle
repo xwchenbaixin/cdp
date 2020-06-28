@@ -1,9 +1,22 @@
 dependencies {
     compile project(':platform-pojo')
+    compile project(':platform-security')
     compile project(':platform-service-interface')
     // https://mvnrepository.com/artifact/com.auth0/java-jwt
     compile group: 'com.auth0', name: 'java-jwt', version: '3.4.0'
-    // https://mvnrepository.com/artifact/com.alibaba.boot/dubbo-spring-boot-starter
-    compile group: 'com.alibaba.boot', name: 'dubbo-spring-boot-starter', version: '0.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // https://mvnrepository.com/artifact/org.apache.poi/poi
+    compile group: 'org.apache.poi', name: 'poi', version: '4.1.2'
+    // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
+    compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
+
+
+    compile group: 'org.apache.dubbo', name: 'dubbo-spring-boot-starter', version: '2.7.6'
+    compile group: 'org.apache.curator', name: 'curator-framework', version: '2.12.0'
+    compile group: 'org.apache.curator', name: 'curator-recipes', version: '2.12.0'
+    compile group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.4.12', ext: 'pom'
+    // https://mvnrepository.com/artifact/org.apache.curator/curator-client
+    //compile group: 'org.apache.curator', name: 'curator-client', version: '2.12.0'
+
 }

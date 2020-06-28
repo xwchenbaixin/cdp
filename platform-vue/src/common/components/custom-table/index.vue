@@ -15,7 +15,8 @@
     </section>
     <!-- 数据表格 -->
     <section >
-      <el-table :data='tableData.slice((pagination.currPage-1)*pagination.pageSize,pagination.currPage*pagination.pageSize)'
+      <el-table :data='
+        url==null?tableData.slice((pagination.currPage-1)*pagination.pageSize,pagination.currPage*pagination.pageSize):reqeustData'
                 :size='size'
                 :border='isBorder'
                 @select='select'
@@ -38,6 +39,7 @@
                          :label="item.label"
                          :width="item.width"
                          :align="item.align"
+                         :show-overflow-tooltip="item['show-overflow-tooltip']"
                          :render-header="item.require?renderHeader:null">
           <template slot-scope="scope">
             <!-- html -->
@@ -123,7 +125,7 @@
     </section>
     <!-- 分页 -->
     <section
-             v-if='isPagination' style="margin:10px;float: left">
+             v-if='isPagination' style="margin:10px;">
       <el-pagination style='display: flex;justify-content: center;height: 100%;align-items: center;'
                      background
                      @current-change="handleCurrentChange"
@@ -137,7 +139,7 @@
 </template>
 
 <script>
-
+  import { get, post } from '@/common/api/http'
 export default {
   props: {
     // 表格型号：mini,medium,small
@@ -160,13 +162,22 @@ export default {
     // 是否显示分页
     isPagination: { type: Boolean, default: true },
 
+    //自动检测分页类别，如果有URL 则从服务器获取数据，没有则根据Data来本地分页
+    url:{type:String,default:null},
+    searchForm:{type:Object,default:null}
 
 
+  },
+  mounted(){
+    this.getTableData();
+    this.pagination.pageSize=10;
+    this.pagination.currPage=1;
   },
   data () {
     return {
       // 分页数据
-      pagination: { pageSize: 10, currPage: 1, total: this.tableData.length }
+      reqeustData:[],
+      pagination: { pageSize: 10, currPage: 1, total: 0 }
     }
   },
   watch: {
@@ -181,11 +192,33 @@ export default {
         }
       })
     },
-    tableData(newVal,oldVal) {
-      this.pagination.total=newVal.length;
+    tableData(newVal,oldVal){
+      if(this.url==null){
+        this.pagination.total=this.tableData.length;
+      }
     }
   },
   methods: {
+    getTableData(){
+      let that=this;
+      if(this.url!=null) {
+        post(this.url, {
+          "param": this.searchForm,
+          "pagination": this.pagination
+        }).then(res => {
+          this.reqeustData = res.data;
+          this.pagination.total=res.total;
+        }).catch(res => {
+          this.$message({
+            message: '获取表数据失败',
+            type: 'error'
+          });
+        })
+      }else{
+        this.pagination.total=this.tableData.length;
+      }
+    },
+
     // 表格勾选
     select (rows, row) {
       this.$emit('select', rows, row);
@@ -196,14 +229,14 @@ export default {
     },
     //
     handleCurrentChange (val) {
-      this.pagination.currPage = val;
-      this.$emit('refresh');
+      this.getTableData();
     },
     handleSizeChange (val) {
-      this.pagination.pageSize = val;
-      this.$emit('refresh');
+      this.getTableData();
     },
-
+    refresh(v){
+      this.getTableData();
+    },
     // tableRowClassName({rowIndex}) {
     //     if (rowIndex % 2 === 0) {
     //         return "stripe-row";
@@ -213,6 +246,9 @@ export default {
     renderHeader (h, obj) {
       return h('span', { class: 'ces-table-require' }, obj.column.label)
     },
+  },
+  activated(){
+    this.refresh("");
   },
 
 }

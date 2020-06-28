@@ -1,93 +1,172 @@
 <template>
-  <div class="ces-main">
 
-    <ces-table
-      size='mini'
-      :isSelection='true'
-      :isIndex='true'
-      :isPagination='true'
-      :isHandle='true'
-      :tableData='tableData'
-      :tableCols='tableCols'
-      :tableHandles='tableHandles'
-      :pagination='pagination'
-    >
-    </ces-table>
+  <div>
+    <el-container>
+      <el-main >
+        <!-- 第一列栅格布局 -->
+        <el-row :gutter="20" style="text-align: center;">
+          <el-col :span="6" class="col" >
+            <el-card class="box-card" >
+              <div slot="header" class="clearfix" style="color: #67c23a;">
+                <span >执行完成</span>
+              </div>
+              <div style="color: #67c23a;font-size: 70px">
+                {{this.timedTaskStatus.success}}
+              </div>
+            </el-card>
+
+          </el-col>
+
+          <el-col :span="6" class="col">
+          <el-card class="box-card">
+            <div slot="header" class="clearfix" style="color: #409eff">
+              <span >执行中</span>
+            </div>
+            <div style="color: #409eff;font-size: 70px">
+              {{this.timedTaskStatus.inExecution}}
+            </div>
+          </el-card>
+        </el-col>
+          <el-col :span="6" class="col">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix" style="color: #e6a23c">
+                <span >未执行</span>
+              </div>
+              <div style="color: #e6a23c;font-size: 70px">
+                {{this.timedTaskStatus.notExecute}}
+              </div>
+            </el-card>
+
+          </el-col>
+        <el-col :span="6" class="col">
+          <el-card class="box-card">
+            <div slot="header" class="clearfix" style="color: #909399">
+              <span >暂停中</span>
+            </div>
+            <div style="color: #909399;font-size: 70px">
+              {{this.timedTaskStatus.pause}}
+            </div>
+          </el-card>
+
+        </el-col>
+        </el-row>
+        <!-- 第二列布局 -->
+        <br>
+        <el-row>
+
+          <el-col :span="24" >
+            <el-card class="box-card">
+              <cus-table
+                ref="tableData"
+                size='mini'
+                :isIndex='true'
+                :isPagination='true'
+                :isHandle='true'
+                :tableCols='tableCols'
+                :url="url"
+              >
+              </cus-table>
+            </el-card>
+
+
+          </el-col>
+        </el-row>
+      </el-main>
+    </el-container>
   </div>
 </template>
 
 <script>
-  import cesTable from '@/common/components/custom-table'
+
+  import { codemirror } from 'vue-codemirror'
+
+  import {
+    listTimedTask
+  } from "@/common/api/";
+  import cusTable from '@/common/components/custom-table'
   export default {
+
     data () {
-
-      let sexs=[{label:'男',value:'M'},{label:'女',value:'F'}]
-      let sexProps={label:'label',value:'value'}
-      let intersts=[{label:'羽毛球',value:'badminton'},{label:'篮球',value:'basketball'}]
-      let interstProps={label:'label',value:'value'}
       return {
-// 查询表单
-        searchData:{
-          name:null,
-          age:null,
-          sex:null,
-          interst:null
+        thimer:Object,
+        timedTaskStatus:{
+          success:0,
+          inExecution:0,
+          notExecute:0,
+          pause:0
         },
-        searchForm:[
-          {type:'Input',label:'姓名',prop:'name',width:'180px',placeholder:'请输入姓名...'},
-          {type:'Input',label:'年龄',prop:'age',width:'180px',placeholder:'请输入年龄...'},
-          {type:'Select',label:'性别',prop:'sex',width:'180px',options:sexs,props:sexProps,change:row=>'',placeholder:'请选择性别...'},
-          {type:'Checkbox',label:'爱好',width:'180px',prop:'interst',checkboxs:intersts,props:interstProps}
-        ],
-        searchHandle:[
-          {label:'查询',type:'primary',handle:()=>''},
-          {label:'重置',type:'primary',handle:()=>''}
-        ],
-
-// 表格
-        tableData:[
-          {name:'张三',age:'12',sex:'男',interst:'女'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'张三',age:'12',sex:'男',interst:'女'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'},
-          {name:'筱华',age:'27',sex:'女',interst:'羽毛球'}
-        ],
+        url:"/timedtask/listTimedTask",
         tableCols:[
-          {label:'姓名',prop:'name'},
-          {label:'年龄',prop:'age'},
-          {label:'性别',prop:'sex'},
-          {label:'爱好',prop:'interst'},
-          {label:'操作',type:'Button',btnList:[
-              {type:'primary',label:'编辑',handle:row=>''},
-              {type:'danger',label:'删除',handle:row=>''}
-            ]}
-        ],
-        tableHandles:[
-          {label:'新增',type:'primary',handle:row=>''}
-        ],
-        pagination:{
-          pageSize:10,
-          pageNum:1,
-          total:15
-        }
+          {label:'定时器名字',prop:'taskName'},
+          {label:'上次触发时间',prop:'lastTime'},
+          {label:'下一次触发时间',prop:'nextTime',formatter:this.nextTimeFormatter},
+          {label:'触发状态',prop:'status',formatter:this.statusFormatter}
+        ]
       }
     },
     components:{
-      cesTable
+      cusTable
+    },
+    activated(){
+      this.initTimedTaskStatus();
+    },
+    created(){
+
+    },
+    methods:{
+
+      statusFormatter(row, column, cellValue, index){
+        if(row.status==0){
+          return "未执行";
+        } else if(row.status==1){
+          return "执行中";
+        } else if(row.status==2){
+          return "执行完成";
+        } else if(row.status==3){
+          return "暂停";
+        }
+      },
+      nextTimeFormatter(row, column, cellValue, index){
+        if(row.status==3){
+          return "任务已暂停";
+        }else{
+          return row.nextTime;
+        }
+      },
+      initTimedTaskStatus(){
+        this.timedTaskStatus={
+          success:0,
+          inExecution:0,
+          notExecute:0,
+          pause:0
+        };
+        let that=this;
+        listTimedTask({
+          param:null
+        }).then(res=>{
+          res.data.forEach((val, index)=>{
+            if(val.status==0){
+              that.timedTaskStatus.notExecute+=1;
+            } else if(val.status==1){
+              that.timedTaskStatus.inExecution+=1;
+            } else if(val.status==2){
+              that.timedTaskStatus.success+=1;
+            } else if(val.status==3){
+              that.timedTaskStatus.pause+=1;
+            }
+          })
+        }).then(()=>{
+          that.$refs.tableData.refresh();
+        })
+      },
+
     }
+
   }
 </script>
 
+
 <style>
+
 
 </style>

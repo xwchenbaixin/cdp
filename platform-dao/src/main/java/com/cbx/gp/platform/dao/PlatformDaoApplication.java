@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
-@EnableTransactionManagement
+
 @MapperScan("com.cbx.gp.platform.dao.mapper")
 public class PlatformDaoApplication {
 

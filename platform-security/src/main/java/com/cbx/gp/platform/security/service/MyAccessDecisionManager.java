@@ -1,5 +1,7 @@
 package com.cbx.gp.platform.security.service;
 
+import com.cbx.gp.platform.security.dao.RedisOperate;
+import com.cbx.gp.platform.security.model.User;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -7,9 +9,11 @@ import org.springframework.security.authentication.InsufficientAuthenticationExc
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 
 
 @Service("myAccessDecisionManager")
@@ -25,8 +29,8 @@ public class MyAccessDecisionManager implements AccessDecisionManager {
         if(null== configAttributes || configAttributes.size() <=0) {
             return;
         }
+
         ConfigAttribute c;
-        
         String needRole;
         //遍历此URL包含的权限
         for(Iterator<ConfigAttribute> iter = configAttributes.iterator(); iter.hasNext(); ) {

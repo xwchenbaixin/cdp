@@ -1,10 +1,11 @@
 package com.cbx.gp.platform.service.impl;
 
-import com.alibaba.dubbo.config.annotation.Service;
+//import org.apache.dubbo.config.annotation.Service;
 import com.cbx.gp.platform.dao.mapper.TestDao;
 import com.cbx.gp.platform.pojo.bean.TestPojo;
 import com.cbx.gp.platform.service.interfaces.TestService;
 
+import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Service

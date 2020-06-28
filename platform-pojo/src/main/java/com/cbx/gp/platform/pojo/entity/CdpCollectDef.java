@@ -1,18 +1,25 @@
 package com.cbx.gp.platform.pojo.entity;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
  * 
  * @author null
- * @date 2020/05/07
+ * @date 2020/05/09
  */
-public class CdpCollectDef {
+public class CdpCollectDef implements Serializable {
     private Integer id;
 
     private String collectName;
 
+    private String collectParam;
+
+    private String headers;
+
     private String dataDomain;
 
-    private Long userId;
+    private Integer userId;
 
     private String nextPage;
 
@@ -21,6 +28,14 @@ public class CdpCollectDef {
     private String collectUrl;
 
     private Integer nextPageTotal;
+
+    private Date operateTime;
+
+    private Date createTime;
+
+    private Integer dataSetDefId;
+
+    private Integer status;
 
     public Integer getId() {
         return id;
@@ -38,6 +53,22 @@ public class CdpCollectDef {
         this.collectName = collectName == null ? null : collectName.trim();
     }
 
+    public String getCollectParam() {
+        return collectParam;
+    }
+
+    public void setCollectParam(String collectParam) {
+        this.collectParam = collectParam == null ? null : collectParam.trim();
+    }
+
+    public String getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(String headers) {
+        this.headers = headers == null ? null : headers.trim();
+    }
+
     public String getDataDomain() {
         return dataDomain;
     }
@@ -46,11 +77,11 @@ public class CdpCollectDef {
         this.dataDomain = dataDomain == null ? null : dataDomain.trim();
     }
 
-    public Long getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
@@ -84,5 +115,37 @@ public class CdpCollectDef {
 
     public void setNextPageTotal(Integer nextPageTotal) {
         this.nextPageTotal = nextPageTotal;
+    }
+
+    public Date getOperateTime() {
+        return operateTime;
+    }
+
+    public void setOperateTime(Date operateTime) {
+        this.operateTime = operateTime;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Integer getDataSetDefId() {
+        return dataSetDefId;
+    }
+
+    public void setDataSetDefId(Integer dataSetDefId) {
+        this.dataSetDefId = dataSetDefId;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 }

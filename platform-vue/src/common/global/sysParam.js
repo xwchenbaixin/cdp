@@ -2,14 +2,26 @@
 import {getMenuTree} from '@/common/api';
 import router from "../router";
 
-getMenuRouterData();
+import {
+  Message,
+  MessageBox
+} from 'element-ui'
 
 const sysParam = {
 }
 
- function getMenuRouterData(){
-   getMenuTree().then(res=>{
-    const menuRoutes = new Array();
+
+
+export async function getMenuRouterData(){
+   let menuRoutes =[];
+  await getMenuTree().then(res=>{
+    if(res.length==0){
+      Message({
+        message: '请给用户赋权！',
+        type: 'error'
+      });
+    }
+
     menuRouterFormat(res,menuRoutes);
     sysParam['menuData']=menuRoutes;
     console.log(menuRoutes)
@@ -47,4 +59,7 @@ function menuRouterFormat(val,menuRoutes){
     }
   }
 }
+
+
+getMenuRouterData();
 export default sysParam;

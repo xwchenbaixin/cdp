@@ -1,5 +1,8 @@
 package webMagic;
 
+import com.alibaba.fastjson.JSON;
+import com.cbx.gp.platform.pojo.entity.CdpCollectDef;
+import com.cbx.gp.platform.pojo.entity.ParamRule;
 import org.seimicrawler.xpath.JXDocument;
 import org.seimicrawler.xpath.JXNode;
 import org.slf4j.Logger;
@@ -54,14 +57,17 @@ public class MyPageProcesser implements PageProcessor {
 
     addNextPageUrl(nextUrl,page);
 
-    List<Map<String,String>> dataList=new ArrayList<>();
+   // List<Map<String,String>> dataList=new ArrayList<>();
 
     //循环数据域，数据域应该是个 数组
     List<JXNode> domaminNodes=html.selN(ccd.getDataDomain());
 
+    List<ParamRule> collectParamList= JSON.parseArray(ccd.getCollectParam(),ParamRule.class);
+
+
     for(JXNode node:domaminNodes){
       Map<String,String> oneData=new HashMap<>();
-      for(ParamRule pr : ccd.getCollectParamList()){
+      for(ParamRule pr : collectParamList){
         if(pr.getDataType()==0 && pr.getXpath()!=""){
           String dataValue=node.selOne(pr.getXpath()).toString();
           oneData.put(pr.getName(),dataValue);
@@ -70,11 +76,11 @@ public class MyPageProcesser implements PageProcessor {
           //其他数据类型处理，如img
         }
       }
-
-      dataList.add(oneData);
+      DataSet.dataList.add(oneData);
+      //dataList.add(oneData);
     }
 
-    System.out.println(dataList);
+    //System.out.println(dataList);
 
   }
 
@@ -104,24 +110,24 @@ public class MyPageProcesser implements PageProcessor {
 
   public void addPageUrls(List<String> pageUrls,Page page){
     Integer nowLevel=(Integer) page.getRequest().getExtra("nextPageTotal");
-    logger.warn("pagenextPageTotal:"+nowLevel);
+    logger.warn("nowPage:"+nowLevel);
     for(String url:pageUrls){
-      if(addUrlSet(url)) {
+
         Request request = new Request(url).putExtra("nextPageTotal", (nowLevel + 1));
         page.getTargetRequests().add(request);
-      }
+
     }
   }
 
   public void addNextPageUrl(String nextPageUrl,Page page){
     Integer nowLevel=(Integer) page.getRequest().getExtra("nextPageTotal");
 
-    logger.warn("pagenextPageTotal:"+nowLevel);
+    logger.warn("nowPage:"+nowLevel);
 
-    if(addUrlSet(nextPageUrl)) {
-      Request request = new Request(nextPageUrl).putExtra("nextPageTotal", (nowLevel + 1));
-      page.getTargetRequests().add(request);
-    }
+
+    Request request = new Request(nextPageUrl).putExtra("nextPageTotal", (nowLevel + 1));
+    page.getTargetRequests().add(request);
+
   }
 
   public Boolean addUrlSet(String url){
@@ -151,9 +157,9 @@ public class MyPageProcesser implements PageProcessor {
       if(ccd.getNextPageType()==0){
         //Selectable selectable= ;
         url=jxDocument.selOne(ccd.getNextPage()).toString();
-        System.out.println(url);
         String baseUrl=page.getRequest().getUrl();
-        url=UrlJoint.getAbsoluteURL(baseUrl,url);
+        url= WebMagicUtils.getAbsoluteURL(baseUrl,url);
+        System.out.println(url);
       }
       else if(ccd.getNextPageType()==1){
 

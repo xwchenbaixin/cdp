@@ -7,4 +7,6 @@ include ':platform-service-impl'
 include ':platform-web'
 include ':platform-security'
 include ':TempDemo'
+include ':webmagic-service'
+include ':timed-task'
 

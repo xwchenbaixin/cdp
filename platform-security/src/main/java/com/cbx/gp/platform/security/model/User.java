@@ -39,8 +39,9 @@ public class User implements UserDetails, CredentialsContainer {
 
 	// ~ Instance fields
 	// ================================================================================================
-	private String password;
-	private String username;
+
+
+
 	private Set<GrantedAuthority> authorities;
 	private boolean accountNonExpired=true;
 	private boolean accountNonLocked=true;
@@ -50,75 +51,55 @@ public class User implements UserDetails, CredentialsContainer {
 	//--------------------------------------------------
 	//mydata
 
-	private int id;
-	private String name;
+	private Integer id;
 
-	@Pattern(regexp = "^男|女$",message = "性别必须是男或女")
-	private String sex;
+	private String username;
 
-	private String workNo;
+	private String nickname;
 
-	@Pattern(regexp = "^[1][3,4,5,6,7,8][0-9]{9}$",message = "电话号码不正确")
-	private String phone;
-	private int roleId;
-	private String roleName;
-	private int state;
-	private int classId;
-	private String className;
-	private String classNo;
 	@NotBlank(message = "密码不为空")
 	@Size(max=16,min=8,message = "密码长度在8-16位")
 	@Pattern(regexp = "^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$",message = "密码需要同时含有数字和字母")
-	private String avatar;
+	private String password;
+	@Pattern(regexp = "^[1][3,4,5,6,7,8][0-9]{9}$",message = "电话号码不正确")
+	private String phone;
+
+	private String email;
+
+	private Integer status;
+
+	private Integer type;
 
 
 
-	public String getClassNo() {
-		return classNo;
-	}
-	public void setClassNo(String classNo) {
-		this.classNo = classNo;
-	}
 	// ~ Constructors
 	// ===================================================================================================
 	public User() {
 
-	}
-	public int getId() {
-		return id;
 	}
 
 	public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
 		this.authorities = Collections.unmodifiableSet(sortAuthorities(authorities));
 	}
 
-	public void setId(int id) {
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public String getNickname() {
+		return nickname;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
 	}
 
-	public String getSex() {
-		return sex;
-	}
-
-	public void setSex(String sex) {
-		this.sex = sex;
-	}
-
-	public String getWorkNo() {
-		return workNo;
-	}
-
-	public void setWorkNo(String workNo) {
-		this.username=workNo;
-		this.workNo = workNo;
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 	public String getPhone() {
@@ -129,63 +110,31 @@ public class User implements UserDetails, CredentialsContainer {
 		this.phone = phone;
 	}
 
-	public int getRoleId() {
-		return roleId;
+	public String getEmail() {
+		return email;
 	}
 
-	public void setRoleId(int roleId) {
-		this.roleId = roleId;
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
-	public String getRoleName() {
-		return roleName;
+	public Integer getStatus() {
+		return status;
 	}
 
-	public void setRoleName(String roleName) {
-		this.roleName = roleName;
+	public void setStatus(Integer status) {
+		this.status = status;
 	}
 
-	public int getState() {
-		return state;
+	public Integer getType() {
+		return type;
 	}
 
-	public void setState(int state) {
-		this.state = state;
+	public void setType(Integer type) {
+		this.type = type;
 	}
 
-	public int getClassId() {
-		return classId;
-	}
-
-	public void setClassId(int classId) {
-		this.classId = classId;
-	}
-
-	public String getClassName() {
-		return className;
-	}
-
-	public void setClassName(String className) {
-		this.className = className;
-	}
-	public String getAvatar() {
-		return avatar;
-	}
-	public void setAvatar(String avatar) {
-		this.avatar = avatar;
-	}
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-
-	public static Log getLogger() {
-		return logger;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	//--------------------------------------------------
+//--------------------------------------------------
 
 
 	// ~ Methods
@@ -202,8 +151,9 @@ public class User implements UserDetails, CredentialsContainer {
 	public String getUsername() {
 		return username;
 	}
+
 	public void setUsername(String username) {
-		if (((username == null) || "".equals(username)) || (password == null)) {
+		if (((username == null) || "".equals(username))) {
 			throw new IllegalArgumentException(
 					"Cannot pass null or empty values to constructor");
 		}

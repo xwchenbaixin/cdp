@@ -7,6 +7,7 @@ import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,9 +22,12 @@ public class MyPipeline implements Pipeline {
 
   @Override
   public void process(ResultItems resultItems, Task task) {
-    for (Map.Entry<String, Object> entry : resultItems.getAll().entrySet()) {
 
+    //Map<String,String> pageData=new HashMap<>();
+    for (Map.Entry<String, Object> entry : resultItems.getAll().entrySet()) {
+      //pageData.put(entry.getKey(), (String) entry.getValue());
       logger.info(entry.getKey() + ":\t" + entry.getValue());
     }
+    //DataSet.dataList.add(pageData);
   }
 }

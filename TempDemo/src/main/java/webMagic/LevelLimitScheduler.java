@@ -22,7 +22,7 @@ public class LevelLimitScheduler extends PriorityScheduler {
   public synchronized void push(Request request, Task task) {
     Integer nowLevel=((Integer) request.getExtra("nextPageTotal"));
     if ( nowLevel!=null&&nowLevel<= levelLimit) {
-      logger.info("nextPageTotal:"+((Integer) request.getExtra("nextPageTotal")).toString()+",,,,url:"+request.getUrl());
+      logger.warn("nextPageTotal:"+((Integer) request.getExtra("nextPageTotal")).toString()+",,,,url:"+request.getUrl());
       super.push(request, task);
     }
   }
